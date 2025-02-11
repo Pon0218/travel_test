@@ -72,5 +72,6 @@ jobs:
          region: '${{ env.REGION }}'
          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/app:${{ github.sha }}'
 
+
      - name: 'Show Output'
        run: 'echo ${{ steps.deploy.outputs.url }}'
