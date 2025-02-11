@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "travel"
+version = "0.1.0"
+description = ""
+authors = ["CSL426 <spark.cs.liao@gmail.com>"]
+packages = [{include = "src"}]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+pytest = "^8.3.4"
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
+pydantic = "^2.10.4"
+googlemaps = "^4.10.0"
+pandas = "^2.2.3"
+python-dotenv = "^1.0.1"
+openai = "=0.28"
+qdrant-client = "^1.12.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
