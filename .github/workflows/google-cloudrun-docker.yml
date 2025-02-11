@@ -1,71 +1,76 @@
 name: 'Build and Deploy to Cloud Run'
 
 on:
-  push:
-    branches:
-      - 'master'
+ push:
+   branches:
+     - 'master'
 
 env:
-  PROJECT_ID: 'project-action-450605'
-  REGION: 'us-central1'
-  SERVICE: 'travel-router'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/424732861548/locations/global/workloadIdentityPools/poool/providers/ponpon'
-  jina_url: ${{ secrets.jina_url }}
-  jina_headers_Authorization: ${{ secrets.jina_headers_Authorization }}
-  qdrant_url: ${{ secrets.qdrant_url }}
-  qdrant_api_key: ${{ secrets.qdrant_api_key }}
-  ChatGPT_api_key: ${{ secrets.ChatGPT_api_key }}
-  LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-  LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-  GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-  MONGODB_URI: ${{ secrets.MONGODB_URI }}
+ PROJECT_ID: 'project-action-450605'
+ REGION: 'us-central1'
+ SERVICE: 'travel-router'
+ WORKLOAD_IDENTITY_PROVIDER: 'projects/424732861548/locations/global/workloadIdentityPools/poool/providers/ponpon'
+ jina_url: ${{ secrets.jina_url }}
+ jina_headers_Authorization: ${{ secrets.jina_headers_Authorization }}
+ qdrant_url: ${{ secrets.qdrant_url }}
+ qdrant_api_key: ${{ secrets.qdrant_api_key }}
+ ChatGPT_api_key: ${{ secrets.ChatGPT_api_key }}
+ LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+ LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+ GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+ MONGODB_URI: ${{ secrets.MONGODB_URI }}
 
 jobs:
-  deploy:
-    runs-on: 'ubuntu-latest'
+ deploy:
+   runs-on: 'ubuntu-latest'
 
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+   permissions:
+     contents: 'read'
+     id-token: 'write'
+     packages: 'write'
 
-    steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@v4'
+   steps:
+     - name: 'Checkout'
+       uses: 'actions/checkout@v4'
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
-        with:
-          workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: 'travel-test@project-action-450605.iam.gserviceaccount.com'
-          token_format: 'access_token'
-          create_credentials_file: true
-          
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
-        with:
-          project_id: '${{ env.PROJECT_ID }}'
-          install_components: 'gke-gcloud-auth-plugin'
-          
-      - name: 'Configure Docker'
-        run: |-
-          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-          
-      - name: 'Build and Push Container'
-        run: |-
-          IMAGE_NAME="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/app:${{ github.sha }}"
-          echo "Building image: ${IMAGE_NAME}"
-          docker build -t "${IMAGE_NAME}" .
-          echo "Pushing image: ${IMAGE_NAME}"
-          docker push "${IMAGE_NAME}"
+     - id: 'auth'
+       name: 'Authenticate to Google Cloud'
+       uses: 'google-github-actions/auth@v2'
+       with:
+         workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
+         service_account: 'travel-test@project-action-450605.iam.gserviceaccount.com'
+         token_format: 'access_token'
+         create_credentials_file: true
+         project_id: '${{ env.PROJECT_ID }}'
+         export_environment_variables: true
+         access_token_lifetime: '3600s'
+         access_token_scopes: 'https://www.googleapis.com/auth/cloud-platform'
+         
+     - name: 'Set up Cloud SDK'
+       uses: 'google-github-actions/setup-gcloud@v2'
+       with:
+         project_id: '${{ env.PROJECT_ID }}'
+         install_components: 'gke-gcloud-auth-plugin'
+         
+     - name: 'Configure Docker'
+       run: |-
+         gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+         
+     - name: 'Build and Push Container'
+       run: |-
+         IMAGE_NAME="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/app:${{ github.sha }}"
+         echo "Building image: ${IMAGE_NAME}"
+         docker build -t "${IMAGE_NAME}" .
+         echo "Pushing image: ${IMAGE_NAME}"
+         docker push "${IMAGE_NAME}"
 
-      - name: 'Deploy to Cloud Run'
-        id: deploy
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: '${{ env.SERVICE }}'
-          region: '${{ env.REGION }}'
-          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/app:${{ github.sha }}'
+     - name: 'Deploy to Cloud Run'
+       id: deploy
+       uses: 'google-github-actions/deploy-cloudrun@v2'
+       with:
+         service: '${{ env.SERVICE }}'
+         region: '${{ env.REGION }}'
+         image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/app:${{ github.sha }}'
 
-      - name: 'Show Output'
-        run: 'echo ${{ steps.deploy.outputs.url }}'
+     - name: 'Show Output'
+       run: 'echo ${{ steps.deploy.outputs.url }}'
