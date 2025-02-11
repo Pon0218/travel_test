@@ -32,26 +32,19 @@ from feature.nosql_mongo.mongo_trip.db_helper import trip_db
 config = dotenv_values("./.env")
 if len(config) == 0:
     print('please check .env path')
-# jina API 設定
-jina_url = 'https://api.jina.ai/v1/embeddings'
-jina_headers_Authorization = config.get('jina_headers_Authorization')
 
-# qdrant 設定
-qdrant_url = config.get('qdrant_url')
-qdrant_api_key = config.get('qdrant_api_key')
+# config 環境變數對應轉換器
+# 從環境變數或 .env 文件載入配置
+import os
+config['jina_url'] = os.getenv('jina_url', config.get('jina_url'))
+config['jina_headers_Authorization'] = os.getenv('jina_headers_Authorization', config.get('jina_headers_Authorization'))
+config['qdrant_url'] = os.getenv('qdrant_url', config.get('qdrant_url'))
+config['qdrant_api_key'] = os.getenv('qdrant_api_key', config.get('qdrant_api_key'))
+config['ChatGPT_api_key'] = os.getenv('ChatGPT_api_key', config.get('ChatGPT_api_key'))
+config['LINE_CHANNEL_SECRET'] = os.getenv('LINE_CHANNEL_SECRET', config.get('LINE_CHANNEL_SECRET'))
+config['LINE_CHANNEL_ACCESS_TOKEN'] = os.getenv('LINE_CHANNEL_ACCESS_TOKEN', config.get('LINE_CHANNEL_ACCESS_TOKEN'))
+config['GOOGLE_MAPS_API_KEY'] = os.getenv('GOOGLE_MAPS_API_KEY', config.get('GOOGLE_MAPS_API_KEY'))
 
-# ChatGPT 設定
-ChatGPT_api_key = config.get('ChatGPT_api_key')
-
-# LINE 設定
-LINE_CHANNEL_SECRET = config.get('LINE_CHANNEL_SECRET')
-LINE_CHANNEL_ACCESS_TOKEN = config.get('LINE_CHANNEL_ACCESS_TOKEN')
-
-# Google Maps 設定
-GOOGLE_MAPS_API_KEY = config.get('GOOGLE_MAPS_API_KEY')
-
-# MongoDB 設定
-MONGODB_URI = config.get('MONGODB_URI')
 
 # 讀取 LINE 的環境變數
 LINE_CHANNEL_ACCESS_TOKEN = config["LINE_CHANNEL_ACCESS_TOKEN"]
